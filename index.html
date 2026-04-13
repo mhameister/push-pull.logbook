@@ -302,25 +302,25 @@ panel.innerHTML = h;
 }
 
 function buildCard(ex, prefix, sess, dt) {
-var key = prefix + “_” + ex.id, sd = (sess.sets && sess.sets[key]) || {};
-var rows = ‘<div class="set-labels"><span></span><span>KG</span><span>REPS</span><span></span></div>’;
+var key = prefix + "_" + ex.id, sd = (sess.sets && sess.sets[key]) || {};
+var rows = '<div class="set-labels"><span></span><span>KG</span><span>REPS</span><span></span></div>';
 for (var s = 1; s <= ex.sets; s++) {
 var d = sd[s] || {};
-rows += ‘<div class="set-row"><div class="set-num">S’ + s + ‘</div>’
-+ ‘<input class=“set-input” type=“number” inputmode=“decimal” placeholder=“kg” value=”’ + (d.kg||””) + ‘” onchange=“saveSet('’ + dt + ‘','’ + key + ‘',’ + s + ‘,'kg',this.value)”>’
-+ ‘<input class=“set-input” type=“number” inputmode=“numeric” placeholder=“reps” value=”’ + (d.reps||””) + ‘” onchange=“saveSet('’ + dt + ‘','’ + key + ‘',’ + s + ‘,'reps',this.value)”>’
-+ ‘<div class=“set-check’ + (d.done ? “ checked” : “”) + ‘” onclick=“toggleSet('’ + dt + ‘','’ + key + ‘',’ + s + ‘,this)”>’ + (d.done ? “\u2713” : “”) + “</div></div>”;
+rows += '<div class="set-row"><div class="set-num">S' + s + '</div>'
++ '<input class="set-input" type="number" inputmode="decimal" placeholder="kg" value="' + (d.kg||"") + '" onchange="saveSet(\'' + dt + '\',\'' + key + '\',' + s + ',\'kg\',this.value)">'
++ '<input class="set-input" type="number" inputmode="numeric" placeholder="reps" value="' + (d.reps||"") + '" onchange="saveSet(\'' + dt + '\',\'' + key + '\',' + s + ',\'reps\',this.value)">'
++ '<div class="set-check' + (d.done ? " checked" : "") + '" onclick="toggleSet(\'' + dt + '\',\'' + key + '\',' + s + ',this)">' + (d.done ? "\u2713" : "") + "</div></div>";
 }
-return ‘<div class="ex-card" onclick="toggleCard(this,event)"><div class="ex-card-header"><div><div class="ex-name">’ + ex.name + ‘</div><div class="ex-meta">’ + ex.sets + “ \xd7 “ + ex.reps + “ \xb7 “ + ex.rest + ‘</div></div><div class="ex-arrow">\u25be</div></div><div class="ex-sets">’ + rows + “</div></div>”;
+return '<div class="ex-card" onclick="toggleCard(this,event)"><div class="ex-card-header"><div><div class="ex-name">' + ex.name + '</div><div class="ex-meta">' + ex.sets + " \xd7 " + ex.reps + " \xb7 " + ex.rest + '</div></div><div class="ex-arrow">\u25be</div></div><div class="ex-sets">' + rows + "</div></div>";
 }
 
 function toggleCard(card, e) {
-if (e.target.tagName === “INPUT” || e.target.classList.contains(“set-check”)) return;
-card.classList.toggle(“open”);
+if (e.target.tagName === "INPUT" || e.target.classList.contains("set-check")) return;
+card.classList.toggle("open");
 }
 
 // ── SAVE ───────────────────────────────────────────────────
-function getOrCreate(dt) { return loadSession(weekOffset, dt) || {sets:{}, notes:””, done:false}; }
+function getOrCreate(dt) { return loadSession(weekOffset, dt) || {sets:{}, notes:"", done:false}; }
 
 function saveSet(dt, key, setNum, field, value) {
 var sess = getOrCreate(dt);
@@ -337,8 +337,8 @@ if (!sess.sets[key]) sess.sets[key] = {};
 if (!sess.sets[key][setNum]) sess.sets[key][setNum] = {};
 var cur = sess.sets[key][setNum].done;
 sess.sets[key][setNum].done = !cur;
-el.classList.toggle(“checked”);
-el.textContent = !cur ? “\u2713” : “”;
+el.classList.toggle("checked");
+el.textContent = !cur ? "\u2713" : "";
 saveSession(weekOffset, dt, sess);
 }
 function saveNote(dt, value) {
@@ -351,32 +351,32 @@ renderWeekStrip(); renderSession(dt);
 }
 function changeWeek(dir) {
 weekOffset += dir; activeDay = null;
-var p = document.getElementById(“sessionPanel”); p.className = “session”; p.innerHTML = “”;
+var p = document.getElementById("sessionPanel"); p.className = "session"; p.innerHTML = "";
 renderWeekStrip();
 }
 
 // ── VIEWS ──────────────────────────────────────────────────
 function switchView(id, btn) {
-document.querySelectorAll(”.view”).forEach(function(v) { v.classList.remove(“active”); });
-document.querySelectorAll(”.nav-btn”).forEach(function(b) { b.classList.remove(“active”); });
-document.getElementById(“view-” + id).classList.add(“active”);
-btn.classList.add(“active”);
-document.getElementById(“weekNav”).style.display = id === “log” ? “” : “none”;
-if (id === “history”) renderHistory();
-if (id === “stats”) renderStats();
+document.querySelectorAll(".view").forEach(function(v) { v.classList.remove("active"); });
+document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
+document.getElementById("view-" + id).classList.add("active");
+btn.classList.add("active");
+document.getElementById("weekNav").style.display = id === "log" ? "" : "none";
+if (id === "history") renderHistory();
+if (id === "stats") renderStats();
 }
 
 // ── HISTORY ────────────────────────────────────────────────
 function renderHistory() {
-var sessions = getAllSessions(), list = document.getElementById(“historyList”);
-if (!sessions.length) { list.innerHTML = ‘<div class="empty">Noch keine abgeschlossenen Sessions.</div>’; return; }
+var sessions = getAllSessions(), list = document.getElementById("historyList");
+if (!sessions.length) { list.innerHTML = '<div class="empty">Noch keine abgeschlossenen Sessions.</div>'; return; }
 list.innerHTML = sessions.map(function(s) {
-var p = PLAN[s.dayType]; if (!p) return “”;
+var p = PLAN[s.dayType]; if (!p) return "";
 var d = new Date(s.timestamp);
-return ‘<div class="history-entry" onclick="showModal(\'' + s.key + '\')">’
-+ ‘<div><div class="he-date">’ + fmtShort(d) + ‘</div><div class="he-name">’ + p.subtitle + ‘</div></div>’
-+ ‘<div class="he-badge" style="background:' + p.bg + ';color:' + p.accent + '">’ + p.name + “</div></div>”;
-}).join(””);
+return '<div class="history-entry" onclick="showModal(\'' + s.key + '\')">'
++ '<div><div class="he-date">' + fmtShort(d) + '</div><div class="he-name">' + p.subtitle + '</div></div>'
++ '<div class="he-badge" style="background:' + p.bg + ';color:' + p.accent + '">' + p.name + "</div></div>";
+}).join("");
 }
 
 function showModal(key) {
@@ -384,53 +384,53 @@ try {
 var s = JSON.parse(localStorage.getItem(key)); if (!s || !s.dayType) return;
 var p = PLAN[s.dayType];
 var allEx = (p.coreFirst || []).concat(p.push || []).concat(p.pull || []).concat(p.exercises || []).concat(p.core || []);
-var exHtml = “”;
+var exHtml = "";
 allEx.forEach(function(ex) {
-var prefixes = [“cf”,“pu”,“pl”,“ex”,“co”], sd = null;
-prefixes.forEach(function(px) { if (s.sets && s.sets[px + “*” + ex.id]) sd = s.sets[px + “*” + ex.id]; });
+var prefixes = ["cf","pu","pl","ex","co"], sd = null;
+prefixes.forEach(function(px) { if (s.sets && s.sets[px + "_" + ex.id]) sd = s.sets[px + "_" + ex.id]; });
 if (!sd) return;
 var rows = Object.entries(sd).filter(function(e) { return e[1].kg || e[1].reps; })
-.map(function(e) { return “S” + e[0] + “: “ + (e[1].kg||”\u2014”) + “ kg \xd7 “ + (e[1].reps||”\u2014”) + “  “ + (e[1].done ? “\u2713” : “”); }).join(”\n”);
+.map(function(e) { return "S" + e[0] + ": " + (e[1].kg||"\u2014") + " kg \xd7 " + (e[1].reps||"\u2014") + "  " + (e[1].done ? "\u2713" : ""); }).join("\n");
 if (!rows) return;
-exHtml += ‘<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;margin-bottom:3px">’ + ex.name + ‘</div>’
-+ ‘<pre style="font-family:monospace;font-size:12px;color:var(--muted);line-height:1.8;white-space:pre-wrap">’ + rows + “</pre></div>”;
+exHtml += '<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;margin-bottom:3px">' + ex.name + '</div>'
++ '<pre style="font-family:monospace;font-size:12px;color:var(--muted);line-height:1.8;white-space:pre-wrap">' + rows + "</pre></div>";
 });
-document.getElementById(“modalContent”).innerHTML =
-‘<div style="font-size:16px;font-weight:700;margin-bottom:3px">’ + p.name + “ \u2014 “ + p.subtitle + “</div>”
-+ ‘<div style="font-family:monospace;font-size:11px;color:var(--muted);margin-bottom:16px">’ + fmtFull(new Date(s.timestamp)) + “</div>”
-+ (exHtml || ‘<div class="empty">Keine Daten gespeichert.</div>’)
-+ (s.notes ? ‘<div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--muted);font-style:italic">’ + s.notes + “</div>” : “”)
-+ ‘<button class="modal-close" onclick="closeModal()">Schlie\xdfen</button>’;
-document.getElementById(“modalOverlay”).classList.add(“open”);
+document.getElementById("modalContent").innerHTML =
+'<div style="font-size:16px;font-weight:700;margin-bottom:3px">' + p.name + " \u2014 " + p.subtitle + "</div>"
++ '<div style="font-family:monospace;font-size:11px;color:var(--muted);margin-bottom:16px">' + fmtFull(new Date(s.timestamp)) + "</div>"
++ (exHtml || '<div class="empty">Keine Daten gespeichert.</div>')
++ (s.notes ? '<div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--muted);font-style:italic">' + s.notes + "</div>" : "")
++ '<button class="modal-close" onclick="closeModal()">Schlie\xdfen</button>';
+document.getElementById("modalOverlay").classList.add("open");
 } catch(e) {}
 }
-function closeModal() { document.getElementById(“modalOverlay”).classList.remove(“open”); }
+function closeModal() { document.getElementById("modalOverlay").classList.remove("open"); }
 
 // ── STATS ──────────────────────────────────────────────────
 function renderStats() {
 var sessions = getAllSessions(), counts = {upperA:0, lower:0, upperB:0};
 sessions.forEach(function(s) { if (counts[s.dayType] !== undefined) counts[s.dayType]++; });
-document.getElementById(“statsGrid”).innerHTML = [
-{v:sessions.length,              l:“Sessions gesamt”,    c:“var(--blue)”},
-{v:sessions.length * 55 + “m”,  l:“~Trainingszeit”,     c:“var(--green)”},
-{v:counts.upperA,                l:“Upper A (Dr\xfccken)”,c:“var(--red)”},
-{v:counts.upperB,                l:“Upper B (Ziehen)”,   c:“var(--blue)”},
-{v:counts.lower,                 l:“Lower Sessions”,     c:“var(--green)”},
-{v:counts.upperA + counts.upperB,l:“Oberk\xf6rper total”,c:“var(--orange)”},
+document.getElementById("statsGrid").innerHTML = [
+{v:sessions.length,              l:"Sessions gesamt",    c:"var(--blue)"},
+{v:sessions.length * 55 + "m",  l:"~Trainingszeit",     c:"var(--green)"},
+{v:counts.upperA,                l:"Upper A (Dr\xfccken)",c:"var(--red)"},
+{v:counts.upperB,                l:"Upper B (Ziehen)",   c:"var(--blue)"},
+{v:counts.lower,                 l:"Lower Sessions",     c:"var(--green)"},
+{v:counts.upperA + counts.upperB,l:"Oberk\xf6rper total",c:"var(--orange)"},
 ].map(function(item) {
-return ‘<div class="stat-card"><div class="stat-val" style="color:' + item.c + '">’ + item.v + ‘</div><div class="stat-lbl">’ + item.l + “</div></div>”;
-}).join(””);
+return '<div class="stat-card"><div class="stat-val" style="color:' + item.c + '">' + item.v + '</div><div class="stat-lbl">' + item.l + "</div></div>";
+}).join("");
 var recent = sessions.slice(0, 10);
-document.getElementById(“recentList”).innerHTML = !recent.length
-? ‘<div class="empty">Noch keine Sessions.</div>’
+document.getElementById("recentList").innerHTML = !recent.length
+? '<div class="empty">Noch keine Sessions.</div>'
 : recent.map(function(s) {
-var p = PLAN[s.dayType]; if (!p) return “”;
+var p = PLAN[s.dayType]; if (!p) return "";
 var d = new Date(s.timestamp);
-return ‘<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">’
-+ ‘<span style="font-family:monospace;font-size:12px;color:var(--muted)">’ + fmt(d) + “</span>”
-+ ‘<span style="font-size:13px">’ + p.subtitle + “</span>”
-+ ‘<span class=“he-badge” style=“background:’ + p.bg + “;color:” + p.accent + ‘”>’ + p.name + “</span></div>”;
-}).join(””);
+return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">'
++ '<span style="font-family:monospace;font-size:12px;color:var(--muted)">' + fmt(d) + "</span>"
++ '<span style="font-size:13px">' + p.subtitle + "</span>"
++ '<span class="he-badge" style="background:' + p.bg + ";color:" + p.accent + '">' + p.name + "</span></div>";
+}).join("");
 }
 
 // ── INIT ───────────────────────────────────────────────────
