@@ -411,12 +411,12 @@ function renderStats() {
 var sessions = getAllSessions(), counts = {upperA:0, lower:0, upperB:0};
 sessions.forEach(function(s) { if (counts[s.dayType] !== undefined) counts[s.dayType]++; });
 document.getElementById(“statsGrid”).innerHTML = [
-{v:sessions.length,              l:“Sessions gesamt”,    c:“var(–blue)”},
-{v:sessions.length * 55 + “m”,  l:“~Trainingszeit”,     c:“var(–green)”},
-{v:counts.upperA,                l:“Upper A (Dr\xfccken)”,c:“var(–red)”},
-{v:counts.upperB,                l:“Upper B (Ziehen)”,   c:“var(–blue)”},
-{v:counts.lower,                 l:“Lower Sessions”,     c:“var(–green)”},
-{v:counts.upperA + counts.upperB,l:“Oberk\xf6rper total”,c:“var(–orange)”},
+{v:sessions.length,              l:“Sessions gesamt”,    c:“var(--blue)”},
+{v:sessions.length * 55 + “m”,  l:“~Trainingszeit”,     c:“var(--green)”},
+{v:counts.upperA,                l:“Upper A (Dr\xfccken)”,c:“var(--red)”},
+{v:counts.upperB,                l:“Upper B (Ziehen)”,   c:“var(--blue)”},
+{v:counts.lower,                 l:“Lower Sessions”,     c:“var(--green)”},
+{v:counts.upperA + counts.upperB,l:“Oberk\xf6rper total”,c:“var(--orange)”},
 ].map(function(item) {
 return ‘<div class="stat-card"><div class="stat-val" style="color:' + item.c + '">’ + item.v + ‘</div><div class="stat-lbl">’ + item.l + “</div></div>”;
 }).join(””);
