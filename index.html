@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -43,6 +44,8 @@ input, textarea, button { font-family: inherit; }
 .sec-label { font-family: monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; margin-top: 18px; margin-bottom: 7px; padding-left: 8px; border-left: 2px solid var(--muted); color: var(--muted); }
 .sec-label.green { border-color: var(--green); color: var(--green); }
 .sec-label.lime { border-color: #a0c070; color: #a0c070; }
+.sec-label.red { border-color: var(--red); color: var(--red); }
+.sec-label.blue { border-color: var(--blue); color: var(--blue); }
 .ex-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 7px; overflow: hidden; }
 .ex-card-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; cursor: pointer; -webkit-user-select: none; }
 .ex-name { font-weight: 600; font-size: 14px; }
@@ -86,18 +89,20 @@ input, textarea, button { font-family: inherit; }
 </style>
 </head>
 <body>
+
 <div class="header">
-  <div class="header-title">TRAININGS<b>LOGBUCH</b><span class="header-badge">Upper/Lower</span></div>
+  <div class="header-title">TRAININGS<b>LOGBUCH</b><span class="header-badge">Full Upper/Lower</span></div>
   <div class="week-nav" id="weekNav">
     <button onclick="changeWeek(-1)">&#8249;</button>
     <div class="week-label" id="weekLabel"></div>
     <button onclick="changeWeek(1)">&#8250;</button>
   </div>
 </div>
+
 <div class="main">
   <div class="view active" id="view-log">
     <div class="week-strip" id="weekStrip"></div>
-    <div class="info-banner"><b>Wechselwoche:</b> Ungerade KW = Upper A / Lower / Upper B &middot; Gerade KW = Lower / Upper A / Lower</div>
+    <div class="info-banner"><b>Struktur:</b> Tag A = Upper A (Dr&#252;cken-Fokus) &middot; Tag B = Lower &middot; Tag C = Upper B (Ziehen-Fokus) &middot; Jede Muskelgruppe 2x/Woche</div>
     <div class="session" id="sessionPanel"></div>
   </div>
   <div class="view" id="view-history">
@@ -105,50 +110,332 @@ input, textarea, button { font-family: inherit; }
     <div id="historyList"></div>
   </div>
   <div class="view" id="view-stats">
-    <div class="sec-title">Überblick</div>
+    <div class="sec-title">&#220;berblick</div>
     <div class="stats-grid" id="statsGrid"></div>
     <div class="sec-title">Letzte Sessions</div>
     <div id="recentList"></div>
   </div>
 </div>
+
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchView('log',this)"><span class="icon">&#128203;</span>Logbuch</button>
   <button class="nav-btn" onclick="switchView('history',this)"><span class="icon">&#128197;</span>Historie</button>
   <button class="nav-btn" onclick="switchView('stats',this)"><span class="icon">&#128202;</span>Stats</button>
 </nav>
+
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modalContent"></div>
 </div>
+
 <script>
-const PLAN={upperA:{name:"Upper A",day:"Montag",subtitle:"Dr\xfccken-Fokus + Core",accent:"#e05a4a",bg:"rgba(224,90,74,.1)",exercises:[{id:"bp",name:"Langhantel Bankdr\xfccken",sets:4,reps:"5\u20137",rest:"3 min"},{id:"ohp",name:"Schulterdr\xfccken (LH/KH)",sets:3,reps:"6\u20138",rest:"2 min"},{id:"icp",name:"Schr\xe4gbank KH Dr\xfccken",sets:3,reps:"8\u201310",rest:"2 min"},{id:"lr",name:"Kabelzug Seitheben",sets:3,reps:"12\u201315",rest:"90s"},{id:"fp",name:"Face Pulls (Kabel)",sets:3,reps:"15\u201320",rest:"90s"},{id:"tpd",name:"Trizeps Pushdown (Seil)",sets:3,reps:"10\u201312",rest:"90s"}],core:[{id:"pal",name:"Pallof Press (Kabel)",sets:3,reps:"10\u201312/S",rest:"60s"},{id:"db",name:"Dead Bug",sets:3,reps:"8\u201310/S",rest:"60s"}],cardio:"10 Min Ruder-/Fahrrad-Ergometer (Zone 2)"},lower:{name:"Lower",day:"Mittwoch",subtitle:"Beine + Waden + Core",accent:"#4ab87a",bg:"rgba(74,184,122,.1)",coreFirst:[{id:"pl",name:"Plank (Aktivierung)",sets:2,reps:"45\u201360s",rest:"60s"},{id:"spl",name:"Side Plank (Aktivierung)",sets:2,reps:"30\u201345s/S",rest:"60s"}],exercises:[{id:"sq",name:"Kniebeugen (LH, High Bar)",sets:4,reps:"5\u20137",rest:"3 min"},{id:"rdl",name:"Rum\xe4nisches Kreuzheben",sets:3,reps:"8\u201310",rest:"2 min"},{id:"lp",name:"Beinpresse",sets:3,reps:"8\u201312",rest:"2 min"},{id:"lc",name:"Beinbeuger (Maschine)",sets:3,reps:"10\u201312",rest:"90s"},{id:"cr",name:"Wadenheben (stehend)",sets:5,reps:"15\u201320",rest:"60s"}],core:[{id:"aw",name:"Ab-Wheel Rollout",sets:3,reps:"8\u201312",rest:"90s"}],cardio:"12 Min Fahrrad-Ergometer (30s hart / 90s locker)"},upperB:{name:"Upper B",day:"Freitag",subtitle:"Ziehen-Fokus + Core",accent:"#4a90d9",bg:"rgba(74,144,217,.1)",exercises:[{id:"lat",name:"Latzug (weiter Griff)",sets:4,reps:"6\u20138",rest:"2 min"},{id:"row",name:"LH Rudern (Pendlay)",sets:4,reps:"5\u20137",rest:"3 min"},{id:"crow",name:"Seilzug Rudern (eng)",sets:3,reps:"8\u201312",rest:"2 min"},{id:"bc",name:"LH Bizepscurl",sets:3,reps:"8\u201310",rest:"90s"},{id:"hc",name:"Hammer Curls",sets:2,reps:"10\u201312",rest:"90s"},{id:"ohp2",name:"KH Schulterdr\xfccken",sets:2,reps:"10\u201312",rest:"90s"},{id:"ohe",name:"Overhead Trizeps Ext.",sets:2,reps:"12\u201315",rest:"90s"}],core:[{id:"hlr",name:"Hanging Leg Raises",sets:3,reps:"10\u201315",rest:"60s"},{id:"rt",name:"Russian Twists (Gewicht)",sets:3,reps:"12\u201315/S",rest:"60s"}],cardio:"10 Min Treadmill (leichte Steigung, z\xfcgig)"}};
-const DAY_ORDER=["upperA","lower","upperB"];
-let weekOffset=0,activeDay=null;
-function skey(wo,dt){return"log2_w"+wo+"_"+dt}
-function saveSession(wo,dt,data){try{localStorage.setItem(skey(wo,dt),JSON.stringify(Object.assign({},data,{dayType:dt,timestamp:Date.now()})))}catch(e){}}
-function loadSession(wo,dt){try{var s=localStorage.getItem(skey(wo,dt));return s?JSON.parse(s):null}catch(e){return null}}
-function getAllSessions(){var out=[];try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith("log2_w")){var v=JSON.parse(localStorage.getItem(k));if(v&&v.done)out.push(Object.assign({key:k},v))}}}catch(e){}return out.sort(function(a,b){return(b.timestamp||0)-(a.timestamp||0)})}
-function getKW(date){var d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));var y=new Date(Date.UTC(d.getUTCFullYear(),0,1));return Math.ceil((((d-y)/86400000)+1)/7)}
-function getWeekDates(offset){var now=new Date(),dow=now.getDay()===0?6:now.getDay()-1,mon=new Date(now);mon.setDate(now.getDate()-dow+offset*7);return{kw:getKW(mon),dates:[0,2,4].map(function(d){var x=new Date(mon);x.setDate(mon.getDate()+d);return x})}}
-function fmt(d){return d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}
-function fmtFull(d){return d.toLocaleDateString("de-DE",{weekday:"long",day:"2-digit",month:"long",year:"numeric"})}
-function fmtShort(d){return d.toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"2-digit"})}
-function renderWeekStrip(){var wd=getWeekDates(weekOffset);document.getElementById("weekLabel").textContent="KW "+wd.kw;var strip=document.getElementById("weekStrip");strip.innerHTML="";DAY_ORDER.forEach(function(dt,i){var p=PLAN[dt],sess=loadSession(weekOffset,dt),done=sess&&sess.done,chip=document.createElement("div");chip.className="day-chip"+(done?" done":"")+(activeDay===dt?" active":"");chip.innerHTML='<div class="chip-tag" style="color:'+p.accent+'">'+p.name+'</div><div class="chip-day">'+fmt(wd.dates[i])+'</div><div class="chip-sub">'+p.day+"</div>";chip.onclick=function(){selectDay(dt)};strip.appendChild(chip)})}
-function selectDay(dt){activeDay=activeDay===dt?null:dt;renderWeekStrip();if(activeDay)renderSession(activeDay);else{var p=document.getElementById("sessionPanel");p.className="session";p.innerHTML=""}}
-function renderSession(dt){var p=PLAN[dt],sess=loadSession(weekOffset,dt)||{},panel=document.getElementById("sessionPanel");panel.className="session visible";var h='<div class="session-header"><div><div class="session-tag" style="color:'+p.accent+'">'+p.name+'</div><div class="session-title">'+p.subtitle+'</div></div><button class="btn-done'+(sess.done?" marked":"")+'" id="btnDone" onclick="toggleDone(\''+dt+'\')">'+(sess.done?"\u2713 Fertig":"Fertig")+"</button></div>";if(dt==="lower"&&p.coreFirst){h+='<div class="sec-label green">Core-Aktivierung (vor Hauptübungen)</div>';p.coreFirst.forEach(function(ex){h+=buildCard(ex,"cf",sess,dt)})}h+='<div class="sec-label">Hauptübungen</div>';p.exercises.forEach(function(ex){h+=buildCard(ex,"ex",sess,dt)});h+='<div class="sec-label green">Core</div>';p.core.forEach(function(ex){h+=buildCard(ex,"co",sess,dt)});h+='<div class="sec-label lime">Cardio-Finisher</div><div class="cardio-note">'+p.cardio+"</div>";h+='<div style="margin-top:20px"><label class="notes-label">Session-Notizen</label><textarea class="notes-area" placeholder="Wie lief die Session? Gewichtssteigerungen, Besonderheiten..." onchange="saveNote(\''+dt+'\',this.value)">'+(sess.notes||"")+"</textarea></div>";panel.innerHTML=h}
-function buildCard(ex,prefix,sess,dt){var key=prefix+"_"+ex.id,sd=sess.sets&&sess.sets[key]||{},rows='<div class="set-labels"><span></span><span>KG</span><span>REPS</span><span></span></div>';for(var s=1;s<=ex.sets;s++){var d=sd[s]||{};rows+='<div class="set-row"><div class="set-num">S'+s+'</div><input class="set-input" type="number" inputmode="decimal" placeholder="kg" value="'+(d.kg||"")+'" onchange="saveSet(\''+dt+'\',\''+key+'\','+s+',\'kg\',this.value)"><input class="set-input" type="number" inputmode="numeric" placeholder="reps" value="'+(d.reps||"")+'" onchange="saveSet(\''+dt+'\',\''+key+'\','+s+',\'reps\',this.value)"><div class="set-check'+(d.done?" checked":"")+'" onclick="toggleSet(\''+dt+'\',\''+key+'\','+s+',this)">'+(d.done?"\u2713":"")+"</div></div>"}return'<div class="ex-card" onclick="toggleCard(this,event)"><div class="ex-card-header"><div><div class="ex-name">'+ex.name+'</div><div class="ex-meta">'+ex.sets+" \xd7 "+ex.reps+" \xb7 "+ex.rest+'</div></div><div class="ex-arrow">\u25be</div></div><div class="ex-sets">'+rows+"</div></div>"}
-function toggleCard(card,e){if(e.target.tagName==="INPUT"||e.target.classList.contains("set-check"))return;card.classList.toggle("open")}
-function getOrCreate(dt){return loadSession(weekOffset,dt)||{sets:{},notes:"",done:false}}
-function saveSet(dt,key,setNum,field,value){var sess=getOrCreate(dt);if(!sess.sets)sess.sets={};if(!sess.sets[key])sess.sets[key]={};if(!sess.sets[key][setNum])sess.sets[key][setNum]={};sess.sets[key][setNum][field]=value;saveSession(weekOffset,dt,sess)}
-function toggleSet(dt,key,setNum,el){var sess=getOrCreate(dt);if(!sess.sets)sess.sets={};if(!sess.sets[key])sess.sets[key]={};if(!sess.sets[key][setNum])sess.sets[key][setNum]={};var cur=sess.sets[key][setNum].done;sess.sets[key][setNum].done=!cur;el.classList.toggle("checked");el.textContent=!cur?"\u2713":"";saveSession(weekOffset,dt,sess)}
-function saveNote(dt,value){var sess=getOrCreate(dt);sess.notes=value;saveSession(weekOffset,dt,sess)}
-function toggleDone(dt){var sess=getOrCreate(dt);sess.done=!sess.done;saveSession(weekOffset,dt,sess);renderWeekStrip();renderSession(dt)}
-function changeWeek(dir){weekOffset+=dir;activeDay=null;var p=document.getElementById("sessionPanel");p.className="session";p.innerHTML="";renderWeekStrip()}
-function switchView(id,btn){document.querySelectorAll(".view").forEach(function(v){v.classList.remove("active")});document.querySelectorAll(".nav-btn").forEach(function(b){b.classList.remove("active")});document.getElementById("view-"+id).classList.add("active");btn.classList.add("active");document.getElementById("weekNav").style.display=id==="log"?"":"none";if(id==="history")renderHistory();if(id==="stats")renderStats()}
-function renderHistory(){var sessions=getAllSessions(),list=document.getElementById("historyList");if(!sessions.length){list.innerHTML='<div class="empty">Noch keine abgeschlossenen Sessions.</div>';return}list.innerHTML=sessions.map(function(s){var p=PLAN[s.dayType];if(!p)return"";var d=new Date(s.timestamp);return'<div class="history-entry" onclick="showModal(\''+s.key+'\')"><div><div class="he-date">'+fmtShort(d)+'</div><div class="he-name">'+p.subtitle+'</div></div><div class="he-badge" style="background:'+p.bg+";color:"+p.accent+'">'+p.name+"</div></div>"}).join("")}
-function showModal(key){try{var s=JSON.parse(localStorage.getItem(key));if(!s||!s.dayType)return;var p=PLAN[s.dayType],allEx=(p.coreFirst||[]).concat(p.exercises).concat(p.core),exHtml="";allEx.forEach(function(ex){var keys=["cf_","ex_","co_"].map(function(px){return px+ex.id}),sd=null;keys.forEach(function(k){if(s.sets&&s.sets[k])sd=s.sets[k]});if(!sd)return;var rows=Object.entries(sd).filter(function(e){return e[1].kg||e[1].reps}).map(function(e){return"S"+e[0]+": "+(e[1].kg||"\u2014")+" kg \xd7 "+(e[1].reps||"\u2014")+"  "+(e[1].done?"\u2713":"")}).join("\n");if(!rows)return;exHtml+='<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;margin-bottom:3px">'+ex.name+'</div><pre style="font-family:monospace;font-size:12px;color:var(--muted);line-height:1.8;white-space:pre-wrap">'+rows+"</pre></div>"});document.getElementById("modalContent").innerHTML='<div style="font-size:16px;font-weight:700;margin-bottom:3px">'+p.name+" \u2014 "+p.subtitle+'</div><div style="font-family:monospace;font-size:11px;color:var(--muted);margin-bottom:16px">'+fmtFull(new Date(s.timestamp))+"</div>"+(exHtml||'<div class="empty">Keine Daten gespeichert.</div>')+(s.notes?'<div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--muted);font-style:italic">'+s.notes+"</div>":"")+' <button class="modal-close" onclick="closeModal()">Schlie\xdfen</button>';document.getElementById("modalOverlay").classList.add("open")}catch(e){}}
-function closeModal(){document.getElementById("modalOverlay").classList.remove("open")}
-function renderStats(){var sessions=getAllSessions(),counts={upperA:0,lower:0,upperB:0};sessions.forEach(function(s){if(counts[s.dayType]!==undefined)counts[s.dayType]++});document.getElementById("statsGrid").innerHTML=[{v:sessions.length,l:"Sessions gesamt",c:"var(--blue)"},{v:sessions.length*55+"m",l:"~Trainingszeit",c:"var(--green)"},{v:counts.upperA,l:"Upper A Sessions",c:"var(--red)"},{v:counts.lower,l:"Lower Sessions",c:"var(--green)"},{v:counts.upperB,l:"Upper B Sessions",c:"var(--blue)"},{v:counts.upperA+counts.upperB,l:"Oberk\xf6rper total",c:"var(--orange)"}].map(function(item){return'<div class="stat-card"><div class="stat-val" style="color:'+item.c+'">'+item.v+'</div><div class="stat-lbl">'+item.l+"</div></div>"}).join("");var recent=sessions.slice(0,10);document.getElementById("recentList").innerHTML=!recent.length?'<div class="empty">Noch keine Sessions.</div>':recent.map(function(s){var p=PLAN[s.dayType];if(!p)return"";var d=new Date(s.timestamp);return'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-family:monospace;font-size:12px;color:var(--muted)">'+fmt(d)+'</span><span style="font-size:13px">'+p.subtitle+'</span><span class="he-badge" style="background:'+p.bg+";color:"+p.accent+'">'+p.name+"</span></div>"}).join("")}
+// ── PLAN ───────────────────────────────────────────────────
+// Full Upper/Lower: Oberkörper 2x/Woche garantiert
+// Tag A = Upper A (Drücken-Fokus), Tag B = Lower, Tag C = Upper B (Ziehen-Fokus)
+const PLAN = {
+  upperA: {
+    name: "Upper A", day: "Montag", subtitle: "Dr\xfccken-Fokus",
+    accent: "#e05a4a", bg: "rgba(224,90,74,.1)",
+    push: [
+      {id:"bp",  name:"Langhantel Bankdr\xfccken",   sets:4, reps:"5\u20137",   rest:"3 min"},
+      {id:"ohp", name:"Schulterdr\xfccken (LH/KH)",  sets:3, reps:"6\u20138",   rest:"2 min"},
+      {id:"icp", name:"Schr\xe4gbank KH Dr\xfccken",  sets:3, reps:"8\u201310",  rest:"2 min"},
+      {id:"lr",  name:"Kabelzug Seitheben",           sets:3, reps:"12\u201315", rest:"90s"},
+      {id:"tpd", name:"Trizeps Pushdown (Seil)",      sets:3, reps:"10\u201312", rest:"90s"},
+    ],
+    pull: [
+      {id:"fp",  name:"Face Pulls (Kabel)",           sets:3, reps:"15\u201320", rest:"90s"},
+      {id:"hc",  name:"Hammer Curls",                 sets:3, reps:"10\u201312", rest:"90s"},
+    ],
+    core: [
+      {id:"pal", name:"Pallof Press (Kabel)",         sets:3, reps:"10\u201312/S", rest:"60s"},
+      {id:"db",  name:"Dead Bug",                     sets:3, reps:"8\u201310/S",  rest:"60s"},
+    ],
+    cardio: "10 Min Ruder-/Fahrrad-Ergometer (Zone 2)"
+  },
+  lower: {
+    name: "Lower", day: "Mittwoch", subtitle: "Beine + Waden + Core",
+    accent: "#4ab87a", bg: "rgba(74,184,122,.1)",
+    coreFirst: [
+      {id:"pl",  name:"Plank (Aktivierung)",          sets:2, reps:"45\u201360s",   rest:"60s"},
+      {id:"spl", name:"Side Plank (Aktivierung)",     sets:2, reps:"30\u201345s/S", rest:"60s"},
+    ],
+    exercises: [
+      {id:"sq",  name:"Kniebeugen (LH, High Bar)",    sets:4, reps:"5\u20137",  rest:"3 min"},
+      {id:"rdl", name:"Rum\xe4nisches Kreuzheben",    sets:3, reps:"8\u201310", rest:"2 min"},
+      {id:"lp",  name:"Beinpresse",                   sets:3, reps:"8\u201312", rest:"2 min"},
+      {id:"lc",  name:"Beinbeuger (Maschine)",        sets:3, reps:"10\u201312",rest:"90s"},
+      {id:"cr",  name:"Wadenheben (stehend)",         sets:5, reps:"15\u201320",rest:"60s"},
+    ],
+    core: [
+      {id:"aw",  name:"Ab-Wheel Rollout",             sets:3, reps:"8\u201312", rest:"90s"},
+    ],
+    cardio: "12 Min Fahrrad-Ergometer (30s hart / 90s locker)"
+  },
+  upperB: {
+    name: "Upper B", day: "Freitag", subtitle: "Ziehen-Fokus",
+    accent: "#4a90d9", bg: "rgba(74,144,217,.1)",
+    pull: [
+      {id:"lat",  name:"Latzug (weiter Griff)",       sets:4, reps:"6\u20138",   rest:"2 min"},
+      {id:"row",  name:"LH Rudern (Pendlay)",         sets:4, reps:"5\u20137",   rest:"3 min"},
+      {id:"crow", name:"Seilzug Rudern (eng)",        sets:3, reps:"8\u201312",  rest:"2 min"},
+      {id:"bc",   name:"LH Bizepscurl",               sets:3, reps:"8\u201310",  rest:"90s"},
+    ],
+    push: [
+      {id:"ohp2", name:"KH Schulterdr\xfccken",       sets:2, reps:"10\u201312", rest:"90s"},
+      {id:"ohe",  name:"Overhead Trizeps Ext.",       sets:2, reps:"12\u201315", rest:"90s"},
+    ],
+    core: [
+      {id:"hlr", name:"Hanging Leg Raises",           sets:3, reps:"10\u201315",   rest:"60s"},
+      {id:"rt",  name:"Russian Twists (Gewicht)",     sets:3, reps:"12\u201315/S", rest:"60s"},
+    ],
+    cardio: "10 Min Treadmill (leichte Steigung, z\xfcgig)"
+  }
+};
+
+const DAY_ORDER = ["upperA","lower","upperB"];
+
+// ── STORAGE ────────────────────────────────────────────────
+let weekOffset = 0, activeDay = null;
+
+function skey(wo, dt) { return "log3_w" + wo + "_" + dt; }
+function saveSession(wo, dt, data) {
+  try { localStorage.setItem(skey(wo,dt), JSON.stringify(Object.assign({}, data, {dayType:dt, timestamp:Date.now()}))); } catch(e) {}
+}
+function loadSession(wo, dt) {
+  try { var s = localStorage.getItem(skey(wo,dt)); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+}
+function getAllSessions() {
+  var out = [];
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.startsWith("log3_w")) {
+        var v = JSON.parse(localStorage.getItem(k));
+        if (v && v.done) out.push(Object.assign({key:k}, v));
+      }
+    }
+  } catch(e) {}
+  return out.sort(function(a,b) { return (b.timestamp||0) - (a.timestamp||0); });
+}
+
+// ── DATES ──────────────────────────────────────────────────
+function getKW(date) {
+  var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+  var y = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - y) / 86400000) + 1) / 7);
+}
+function getWeekDates(offset) {
+  var now = new Date(), dow = now.getDay() === 0 ? 6 : now.getDay() - 1, mon = new Date(now);
+  mon.setDate(now.getDate() - dow + offset * 7);
+  return { kw: getKW(mon), dates: [0,2,4].map(function(d) { var x = new Date(mon); x.setDate(mon.getDate()+d); return x; }) };
+}
+function fmt(d) { return d.toLocaleDateString("de-DE", {day:"2-digit", month:"2-digit"}); }
+function fmtFull(d) { return d.toLocaleDateString("de-DE", {weekday:"long", day:"2-digit", month:"long", year:"numeric"}); }
+function fmtShort(d) { return d.toLocaleDateString("de-DE", {weekday:"short", day:"2-digit", month:"2-digit", year:"2-digit"}); }
+
+// ── RENDER WEEK ────────────────────────────────────────────
+function renderWeekStrip() {
+  var wd = getWeekDates(weekOffset);
+  document.getElementById("weekLabel").textContent = "KW " + wd.kw;
+  var strip = document.getElementById("weekStrip");
+  strip.innerHTML = "";
+  DAY_ORDER.forEach(function(dt, i) {
+    var p = PLAN[dt], sess = loadSession(weekOffset, dt), done = sess && sess.done;
+    var chip = document.createElement("div");
+    chip.className = "day-chip" + (done ? " done" : "") + (activeDay === dt ? " active" : "");
+    chip.innerHTML = '<div class="chip-tag" style="color:' + p.accent + '">' + p.name + '</div><div class="chip-day">' + fmt(wd.dates[i]) + '</div><div class="chip-sub">' + p.day + "</div>";
+    chip.onclick = function() { selectDay(dt); };
+    strip.appendChild(chip);
+  });
+}
+
+// ── SESSION ────────────────────────────────────────────────
+function selectDay(dt) {
+  activeDay = activeDay === dt ? null : dt;
+  renderWeekStrip();
+  if (activeDay) renderSession(activeDay);
+  else { var p = document.getElementById("sessionPanel"); p.className = "session"; p.innerHTML = ""; }
+}
+
+function renderSession(dt) {
+  var p = PLAN[dt], sess = loadSession(weekOffset, dt) || {}, panel = document.getElementById("sessionPanel");
+  panel.className = "session visible";
+  var h = '<div class="session-header"><div><div class="session-tag" style="color:' + p.accent + '">' + p.name + '</div><div class="session-title">' + p.subtitle + '</div></div>'
+    + '<button class="btn-done' + (sess.done ? " marked" : "") + '" onclick="toggleDone(\'' + dt + '\')">' + (sess.done ? "\u2713 Fertig" : "Fertig") + "</button></div>";
+
+  // Lower: core activation first, then main
+  if (dt === "lower") {
+    h += '<div class="sec-label green">Core-Aktivierung (vor Hauptübungen)</div>';
+    p.coreFirst.forEach(function(ex) { h += buildCard(ex, "cf", sess, dt); });
+    h += '<div class="sec-label">Hauptübungen</div>';
+    p.exercises.forEach(function(ex) { h += buildCard(ex, "ex", sess, dt); });
+    h += '<div class="sec-label green">Core</div>';
+    p.core.forEach(function(ex) { h += buildCard(ex, "co", sess, dt); });
+  }
+
+  // Upper A: push focus, then pull complement, then core
+  if (dt === "upperA") {
+    h += '<div class="sec-label red">Drücken</div>';
+    p.push.forEach(function(ex) { h += buildCard(ex, "pu", sess, dt); });
+    h += '<div class="sec-label blue">Ziehen (Schulterbalance)</div>';
+    p.pull.forEach(function(ex) { h += buildCard(ex, "pl", sess, dt); });
+    h += '<div class="sec-label green">Core</div>';
+    p.core.forEach(function(ex) { h += buildCard(ex, "co", sess, dt); });
+  }
+
+  // Upper B: pull focus, then push complement, then core
+  if (dt === "upperB") {
+    h += '<div class="sec-label blue">Ziehen</div>';
+    p.pull.forEach(function(ex) { h += buildCard(ex, "pl", sess, dt); });
+    h += '<div class="sec-label red">Drücken (Frequenz)</div>';
+    p.push.forEach(function(ex) { h += buildCard(ex, "pu", sess, dt); });
+    h += '<div class="sec-label green">Core</div>';
+    p.core.forEach(function(ex) { h += buildCard(ex, "co", sess, dt); });
+  }
+
+  h += '<div class="sec-label lime">Cardio-Finisher</div><div class="cardio-note">' + p.cardio + "</div>";
+  h += '<div style="margin-top:20px"><label class="notes-label">Session-Notizen</label>'
+    + '<textarea class="notes-area" placeholder="Wie lief die Session? Gewichtssteigerungen, Besonderheiten..." onchange="saveNote(\'' + dt + '\',this.value)">' + (sess.notes || "") + "</textarea></div>";
+
+panel.innerHTML = h;
+}
+
+function buildCard(ex, prefix, sess, dt) {
+var key = prefix + “_” + ex.id, sd = (sess.sets && sess.sets[key]) || {};
+var rows = ‘<div class="set-labels"><span></span><span>KG</span><span>REPS</span><span></span></div>’;
+for (var s = 1; s <= ex.sets; s++) {
+var d = sd[s] || {};
+rows += ‘<div class="set-row"><div class="set-num">S’ + s + ‘</div>’
++ ‘<input class=“set-input” type=“number” inputmode=“decimal” placeholder=“kg” value=”’ + (d.kg||””) + ‘” onchange=“saveSet('’ + dt + ‘','’ + key + ‘',’ + s + ‘,'kg',this.value)”>’
++ ‘<input class=“set-input” type=“number” inputmode=“numeric” placeholder=“reps” value=”’ + (d.reps||””) + ‘” onchange=“saveSet('’ + dt + ‘','’ + key + ‘',’ + s + ‘,'reps',this.value)”>’
++ ‘<div class=“set-check’ + (d.done ? “ checked” : “”) + ‘” onclick=“toggleSet('’ + dt + ‘','’ + key + ‘',’ + s + ‘,this)”>’ + (d.done ? “\u2713” : “”) + “</div></div>”;
+}
+return ‘<div class="ex-card" onclick="toggleCard(this,event)"><div class="ex-card-header"><div><div class="ex-name">’ + ex.name + ‘</div><div class="ex-meta">’ + ex.sets + “ \xd7 “ + ex.reps + “ \xb7 “ + ex.rest + ‘</div></div><div class="ex-arrow">\u25be</div></div><div class="ex-sets">’ + rows + “</div></div>”;
+}
+
+function toggleCard(card, e) {
+if (e.target.tagName === “INPUT” || e.target.classList.contains(“set-check”)) return;
+card.classList.toggle(“open”);
+}
+
+// ── SAVE ───────────────────────────────────────────────────
+function getOrCreate(dt) { return loadSession(weekOffset, dt) || {sets:{}, notes:””, done:false}; }
+
+function saveSet(dt, key, setNum, field, value) {
+var sess = getOrCreate(dt);
+if (!sess.sets) sess.sets = {};
+if (!sess.sets[key]) sess.sets[key] = {};
+if (!sess.sets[key][setNum]) sess.sets[key][setNum] = {};
+sess.sets[key][setNum][field] = value;
+saveSession(weekOffset, dt, sess);
+}
+function toggleSet(dt, key, setNum, el) {
+var sess = getOrCreate(dt);
+if (!sess.sets) sess.sets = {};
+if (!sess.sets[key]) sess.sets[key] = {};
+if (!sess.sets[key][setNum]) sess.sets[key][setNum] = {};
+var cur = sess.sets[key][setNum].done;
+sess.sets[key][setNum].done = !cur;
+el.classList.toggle(“checked”);
+el.textContent = !cur ? “\u2713” : “”;
+saveSession(weekOffset, dt, sess);
+}
+function saveNote(dt, value) {
+var sess = getOrCreate(dt); sess.notes = value; saveSession(weekOffset, dt, sess);
+}
+function toggleDone(dt) {
+var sess = getOrCreate(dt); sess.done = !sess.done;
+saveSession(weekOffset, dt, sess);
+renderWeekStrip(); renderSession(dt);
+}
+function changeWeek(dir) {
+weekOffset += dir; activeDay = null;
+var p = document.getElementById(“sessionPanel”); p.className = “session”; p.innerHTML = “”;
+renderWeekStrip();
+}
+
+// ── VIEWS ──────────────────────────────────────────────────
+function switchView(id, btn) {
+document.querySelectorAll(”.view”).forEach(function(v) { v.classList.remove(“active”); });
+document.querySelectorAll(”.nav-btn”).forEach(function(b) { b.classList.remove(“active”); });
+document.getElementById(“view-” + id).classList.add(“active”);
+btn.classList.add(“active”);
+document.getElementById(“weekNav”).style.display = id === “log” ? “” : “none”;
+if (id === “history”) renderHistory();
+if (id === “stats”) renderStats();
+}
+
+// ── HISTORY ────────────────────────────────────────────────
+function renderHistory() {
+var sessions = getAllSessions(), list = document.getElementById(“historyList”);
+if (!sessions.length) { list.innerHTML = ‘<div class="empty">Noch keine abgeschlossenen Sessions.</div>’; return; }
+list.innerHTML = sessions.map(function(s) {
+var p = PLAN[s.dayType]; if (!p) return “”;
+var d = new Date(s.timestamp);
+return ‘<div class="history-entry" onclick="showModal(\'' + s.key + '\')">’
++ ‘<div><div class="he-date">’ + fmtShort(d) + ‘</div><div class="he-name">’ + p.subtitle + ‘</div></div>’
++ ‘<div class="he-badge" style="background:' + p.bg + ';color:' + p.accent + '">’ + p.name + “</div></div>”;
+}).join(””);
+}
+
+function showModal(key) {
+try {
+var s = JSON.parse(localStorage.getItem(key)); if (!s || !s.dayType) return;
+var p = PLAN[s.dayType];
+var allEx = (p.coreFirst || []).concat(p.push || []).concat(p.pull || []).concat(p.exercises || []).concat(p.core || []);
+var exHtml = “”;
+allEx.forEach(function(ex) {
+var prefixes = [“cf”,“pu”,“pl”,“ex”,“co”], sd = null;
+prefixes.forEach(function(px) { if (s.sets && s.sets[px + “*” + ex.id]) sd = s.sets[px + “*” + ex.id]; });
+if (!sd) return;
+var rows = Object.entries(sd).filter(function(e) { return e[1].kg || e[1].reps; })
+.map(function(e) { return “S” + e[0] + “: “ + (e[1].kg||”\u2014”) + “ kg \xd7 “ + (e[1].reps||”\u2014”) + “  “ + (e[1].done ? “\u2713” : “”); }).join(”\n”);
+if (!rows) return;
+exHtml += ‘<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;margin-bottom:3px">’ + ex.name + ‘</div>’
++ ‘<pre style="font-family:monospace;font-size:12px;color:var(--muted);line-height:1.8;white-space:pre-wrap">’ + rows + “</pre></div>”;
+});
+document.getElementById(“modalContent”).innerHTML =
+‘<div style="font-size:16px;font-weight:700;margin-bottom:3px">’ + p.name + “ \u2014 “ + p.subtitle + “</div>”
++ ‘<div style="font-family:monospace;font-size:11px;color:var(--muted);margin-bottom:16px">’ + fmtFull(new Date(s.timestamp)) + “</div>”
++ (exHtml || ‘<div class="empty">Keine Daten gespeichert.</div>’)
++ (s.notes ? ‘<div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--muted);font-style:italic">’ + s.notes + “</div>” : “”)
++ ‘<button class="modal-close" onclick="closeModal()">Schlie\xdfen</button>’;
+document.getElementById(“modalOverlay”).classList.add(“open”);
+} catch(e) {}
+}
+function closeModal() { document.getElementById(“modalOverlay”).classList.remove(“open”); }
+
+// ── STATS ──────────────────────────────────────────────────
+function renderStats() {
+var sessions = getAllSessions(), counts = {upperA:0, lower:0, upperB:0};
+sessions.forEach(function(s) { if (counts[s.dayType] !== undefined) counts[s.dayType]++; });
+document.getElementById(“statsGrid”).innerHTML = [
+{v:sessions.length,              l:“Sessions gesamt”,    c:“var(–blue)”},
+{v:sessions.length * 55 + “m”,  l:“~Trainingszeit”,     c:“var(–green)”},
+{v:counts.upperA,                l:“Upper A (Dr\xfccken)”,c:“var(–red)”},
+{v:counts.upperB,                l:“Upper B (Ziehen)”,   c:“var(–blue)”},
+{v:counts.lower,                 l:“Lower Sessions”,     c:“var(–green)”},
+{v:counts.upperA + counts.upperB,l:“Oberk\xf6rper total”,c:“var(–orange)”},
+].map(function(item) {
+return ‘<div class="stat-card"><div class="stat-val" style="color:' + item.c + '">’ + item.v + ‘</div><div class="stat-lbl">’ + item.l + “</div></div>”;
+}).join(””);
+var recent = sessions.slice(0, 10);
+document.getElementById(“recentList”).innerHTML = !recent.length
+? ‘<div class="empty">Noch keine Sessions.</div>’
+: recent.map(function(s) {
+var p = PLAN[s.dayType]; if (!p) return “”;
+var d = new Date(s.timestamp);
+return ‘<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">’
++ ‘<span style="font-family:monospace;font-size:12px;color:var(--muted)">’ + fmt(d) + “</span>”
++ ‘<span style="font-size:13px">’ + p.subtitle + “</span>”
++ ‘<span class=“he-badge” style=“background:’ + p.bg + “;color:” + p.accent + ‘”>’ + p.name + “</span></div>”;
+}).join(””);
+}
+
+// ── INIT ───────────────────────────────────────────────────
 renderWeekStrip();
 </script>
+
 </body>
 </html>
